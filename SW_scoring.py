@@ -116,29 +116,28 @@ def backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2):
             finalList.pop()
 
 
-def get_index_info(chrom1: str, chrom2: str, start1: int, start2: int, end1: int, end2: int):
+def get_index_info(chrom: str, chrom_start: int, chrom_end: int, score: int):
     """
     Output a dataframe with information like BED.
-    :param chrom1: The name of the chromosome from which sequence1 came.
-    :param chrom2: The name of the chromosome from which sequence2 came.
-    :param start1: The start position of sequence1 in the chromosome.
-    :param start2: The start position of sequence1 in the chromosome.
-    :param end1: The end position of sequence1 in the chromosome.
-    :param end2: The end position of sequence2 in the chromosome.
-    :return: Dataframe with information including chrom, chrom_start, and chrom_end.
+    :param chrom: The name of the chromosome from which sequence1 came.
+    :param chrom_start: The start position of sequence1 in the chromosome.
+    :param chrom_end: The end position of sequence1 in the chromosome.
+    :param score: The score made by SW algorithm.
+    :return: Dataframe with information including chrom, chrom_start, chrom_end, and score.
     """
-    df = pd.DataFrame([[chrom1, start1, end1], [chrom2, start2, end2]],
-                      columns=['chrom', 'chrom_start', 'chrom_end'])
+    df = pd.DataFrame([[chrom, chrom_start, chrom_end, score]],
+                      columns=['chrom', 'chrom_start', 'chrom_end', 'score'])
     return df
 
 
 if __name__ == '__main__':
     route_rec()
-    seq1 = 'ACGTA'
-    seq2 = 'GGGGGGGACGT'
+    seq1 = 'GATCG'
+    seq2 = 'aGATCGatgaaga'
     gap = -5
     iter_mat, dir_rec = create_iterative_matrix(seq1, seq2, gap)
     index1 = np.argwhere(iter_mat == np.max(iter_mat))[0, 0]-1
     index2 = np.argwhere(iter_mat == np.max(iter_mat))[0, 1]-1
+    score = np.max(iter_mat)
     backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2)
-    print(get_index_info('chrX', 'chrY', start_index[0], start_index[1], index1, index2))
+    print(get_index_info('chrX', start_index[1], index2, score))
