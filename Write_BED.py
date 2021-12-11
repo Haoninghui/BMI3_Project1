@@ -17,7 +17,7 @@ def write_bed(chrom, chrom_start, chrom_end):
 
 def df2bed(df):
     """
-
+    Writing BED file from dataframe.
     :param df: a dataframe containing the name of the chromosome (chrom),
     the starting/end position of the feature in the chromosome (chrom_start, chrom_end).
     :return: NULL
