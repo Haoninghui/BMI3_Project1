@@ -26,9 +26,3 @@ def fasta2dict(filename):
     f.close()
     return dic
 
-
-if __name__ == '__main__':
-    ref = Fasta(r'tests/families.fa')
-    print(ref.keys())
-    print(len(ref['DF0000558.4'][0:].seq))
-    print(len(fasta2dict(r'tests/families.fa')['DF0000558.4']))

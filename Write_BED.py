@@ -1,19 +1,5 @@
 # Final output, writing a BED file.
-'''
-def write_bed(chrom, chrom_start, chrom_end):
-    """
-    Writing a BED file.
-    :param chrom: The name of the chromosome (e.g. chr1, chrX) or scaffold.
-    :param chrom_start: The starting position of the feature in the chromosome or scaffold.
-    The number of the first base is regarded as 0.
-    :param chrom_end: The end position of the feature in the chromosome or scaffold.
-    :return: NULL
-    """
-    f = open(r'./tests/sampleOutput.bed', 'a')
-    f.write('\n{}\t{}\t{}'.format(chrom, chrom_start, chrom_end))
-    f.close()
-    # If all the records are saving to the BED file, the first line need to be delete.
-'''
+
 
 def df2bed(df):
     """
@@ -32,10 +18,3 @@ def df2bed(df):
         else:
             f.write('\n{}\t{}\t{}'.format(chrom, chrom_start, chrom_end))
     f.close()
-
-
-if __name__ == '__main__':
-    import pandas as pd
-    df = pd.DataFrame([['chr1', 0, 1000], ['chrX', 9, 1500], ['chr10', 1, 1001]],
-                      columns=['chrom', 'chrom_start', 'chrom_end'])
-    df2bed(df)

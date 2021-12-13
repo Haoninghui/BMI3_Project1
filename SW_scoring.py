@@ -123,29 +123,8 @@ def get_index_info(chrom: str, chrom_end: int, r: int):
     :param chrom: The name of the chromosome from which sequence1 came.
     :param chrom_end: The end position of sequence1 in the chromosome.
     :param r: Index of reference genome/chromosome.
-    :return: Dataframe with information including chrom, chrom_start, chrom_end, and score.
+    :return: A list with information including chrom, chrom_start, chrom_end, and score.
     """
     global start_index
     df = [chrom, start_index[1]+r, chrom_end+r]
     return df
-
-
-if __name__ == '__main__':
-    gene = Fasta(r'tests/families.fa')
-    gene = gene['DF0000558.4'][0:]
-    print(gene[0:20])
-    print(index2seq[0, 20, gene])
-    '''
-    create_global()
-    seq1 = 'GATCG'
-    seq2 = 'nGATCGatganga'
-    gap = -5
-    iter_mat, dir_rec = create_iterative_matrix(seq1, seq2, gap)
-    index1 = np.argwhere(iter_mat == np.max(iter_mat))[0, 0]-1
-    index2 = np.argwhere(iter_mat == np.max(iter_mat))[0, 1]-1
-    score = np.max(iter_mat)
-    print(iter_mat)
-    if score >= 40:
-        backtracking(iter_mat, dir_rec, index1, index2)
-        print(get_index_info('chrX', index2, 1))
-    '''
