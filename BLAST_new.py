@@ -3,34 +3,18 @@ import pandas as pd
 import time
 import re
 
-# Read .fasta file into a dictionary object, containing the chromosome index and the correspond nucleotide sequence.
-def FaToDict(filename):
-    """
-    :param filename: the repository of the .fasta file
-    :return: a dictionary which values are the nucleotide sequences
-    """
-    f = open(filename, 'r')
-    dic = {}
-    for line in f:
-        if line.startswith('>'):
-            index = line.replace('>', '').split()[0]
-            dic[index] = ''
-        else:
-            dic[index] += line.replace('\n', '').strip()
-    f.close()
-    return dic
 
 #Generate reverse and complementary seq
-def Rev_Comlementary(DNA):
+def Rev_Complementary(DNA):
     """
     Generate the reverse and complementary seq: (-) strand
     :para DNA: query seq or ref genome seq
     :return: the complementary string from 5' to 3'
     """
-    com = {'A': 'T', 'a':'T',
-           'T': 'A', 't':'A',
-           'C': 'G', 'c':'G',
-           'G': 'C', 'g':'C'}
+    com = {'A': 'T', 'a': 'T',
+           'T': 'A', 't': 'A',
+           'C': 'G', 'c': 'G',
+           'G': 'C', 'g': 'C'}
     dna = []
     for n in DNA:
         dna.append(com[n])
@@ -189,6 +173,7 @@ def BLAST(query, ref):
         if i in ref_seed:#python3写法
             match_seed = match_seed.append({'q':query_seed[i], 'r':ref_seed[i], 'l': 11},
                               ignore_index = True)#可存list
+            #q: start index on query, r: start index on ref, l: length of seed on query
             #把matched的seed在query和ref genome中对应的index存入一个DF
     #Merge the overlapped and nearby seeds
     merge_seeds = merge_seed(match_seed)#for further extend
@@ -196,53 +181,44 @@ def BLAST(query, ref):
     del ref_seed,query_seed
     #First extend using simple hamming distance
     #规定比对的边界（在ref上面长度应略大于query长度（可能ref会有gap））
-    for row in range(len(merge_seeds)):#for every merged seed in dataframe（每一行是一个seed）
-        ii = 0 #距离seed开头结尾的距离
-        sumscore = 2 * merge_seeds['l'][row]#Initial score
-        q_start = merge_seeds['q'][row]#start index in query seq
-        r_start = merge_seeds['r'][row]#start index in ref seq
-        l = merge_seeds['l'][row]#length of the seed
+    #generate a new column to store the length of matched seq on ref genome, rl
+    merge_seeds['rl'] = 0
+    #now, l is query length(ii), rl is ref length(iir)
+    for row in range(len(merge_seeds)):  # for every merged seed in dataframe（每一行是一个seed）
+        sumscore = 1 * merge_seeds['l'][row]  # Initial score
+        q_start = merge_seeds['q'][row]  # start index in query seq
+        r_start = merge_seeds['r'][row]  # start index in ref seq
+        l = merge_seeds['l'][row]  # length of the seed
+        rl = merge_seeds['l'][row]  # length of the seed in ref
+        # 左边右边一边一个碱基
         while sumscore > 0:
-            if ii == q_start: break #extend to the first index of query
-            if ii == r_start: break #extend to the first index of ref
-            sumscore = sumscore + hammingScore(query[q_start-ii],ref[r_start-ii]) \
-                       + hammingScore(query[q_start+l+ii],ref[r_start+l+ii])
-            ii += 1
-            if ii > len(query) - q_start - l: break #此时query已经到了最后，但ref可以更长，此时sumscore就为ref往后延伸的长度
-        merge_seeds['q'][row] = q_start - ii
-        #SW algorithm
-        #matched seed 之前的矩阵
-
-        #matched seed 之后的矩阵
-
-        '''
-        #使用打分矩阵计算初步延伸距离
-        ii = 0 #extend distance
-        sumscore = 2 * merge_seeds['l'][row]#Initial score
-        q_start = merge_seeds['q'][row]#start index in query seq
-        r_start = merge_seeds['r'][row]#start index in ref seq
-        l = merge_seeds['l'][row]#length of the seed
-        while sumscore > 0:
-        '''
-
-
-
-
-#Main code
-#interact with users
-print("Please input your query file with the pathway (in .fasta format):")
-query_file = input()
-print("Please input your reference genome file with the pathway (in .fasta format):")
-ref_file = input()
-if format is not the .fasta:
-    print("Please input the file in .fasta format, please.")
-
-#record the time
-starts = time.clock()
-query_seq = FaToDict(query_file)
-#把一个chr分成很多段，一段一段的进行seed&extend
-ref = FaToDict(ref_file)
-
-end = time.clock()
-print ("Using time: %fs" % (end-starts))
-print('--------------------------------------')
+            if q_start > 0 and q_start + l <= len(query) - 1:  # normal case
+                sumscore += hammingScore(query[q_start - 1], ref[r_start - 1]) + hammingScore(query[q_start + l],
+                                                                                              ref[r_start + rl])
+                q_start -= 1
+                r_start -= 1
+                l += 2  # 左右两边同时延伸了一个碱基
+                rl += 2
+            elif q_start <= 0 and q_start + l <= len(query) - 1:  # 超过了开头没有超过结尾
+                sumscore += hammingScore(query[q_start + l], ref[r_start + rl]) - 1
+                q_start = 0
+                r_start -= 1
+                l += 1
+                rl += 2
+            elif q_start > 0 and q_start + l > len(query) - 1:  # 超过了结尾没有超过开头
+                sumscore += hammingScore(query[q_start - 1], ref[r_start - 1]) - 1
+                q_start -= 1
+                r_start -= 1
+                l += 1
+                rl += 2
+            elif q_start <= 0 and q_start + l > len(query) - 1:  # 两边都超过了query长度
+                q_start = 0
+                r_start -= 1
+                rl += 2
+                break
+        merge_seeds.iloc[row, 0] = q_start
+        merge_seeds.iloc[row, 1] = r_start
+        merge_seeds.iloc[row, 2] = l
+        merge_seeds.iloc[row, 3] = rl
+    #SW algorithm to further calculate
+    return merge_seeds

@@ -1,10 +1,27 @@
 # Smith-Waterman Algorithm
 
 import numpy as np
-import pandas as pd
+from pyfaidx import Fasta
 
 
-def index2seq(start: int, end: int, seq: str):
+def create_global():
+    """
+    Create some global variables.
+    :return: NULL
+    """
+    global finalList
+    global start_index
+    global mat
+    finalList = []
+    start_index = []
+    mat = np.array([[10, -3, -1, -4, 10],
+                    [-3, 9, -5, 0, -3],
+                    [-1, -5, 7, -3, -1],
+                    [-4, 0, -3, 8, -4],
+                    [10, -3, -1, -4, 10]])
+
+
+def index2seq(start, end, seq):
     """
     Transform indexes to sequence.
     :param start: the starting position of a subsequence in a certain sequence
@@ -18,10 +35,10 @@ def index2seq(start: int, end: int, seq: str):
 def sym2no(sym: str) -> int:
     """
     Transform symbols to numbers.
-    :param sym: symbol, ordering as ACGT
+    :param sym: symbol, ordering as ACGT, N = A
     :return: transformed symbol
     """
-    trans = str.maketrans('ACTGacgt', '01230123')
+    trans = str.maketrans('ACTGNacgtn', '0123001230')
     return int(sym.translate(trans))
 
 
@@ -32,10 +49,7 @@ def get_score(sym1: str, sym2: str) -> int:
     :param sym2: second symbol yo be compared
     :return: the score of the similarity of 2 symbols
     """
-    mat = pd.DataFrame([[4, -7, -5, -7],
-                        [-7, 4, -7, -5],
-                        [-5, -7, 4, -7],
-                        [-7, -5, -7, 4]])
+    global mat
     return mat[sym2no(sym1)][sym2no(sym2)]
 
 
@@ -65,24 +79,11 @@ def create_iterative_matrix(seq1: str, seq2: str, gap=-5):
     return iter_mat, dir_rec
 
 
-def route_rec():
-    """
-    Record the route during backtracking.
-    :return: NULL
-    """
-    global finalList
-    global start_index
-    finalList = []
-    start_index = []
-
-
-def backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2):
+def backtracking(iter_mat, dir_rec, index1, index2):
     """
     Find the route from end position to start position, in the iterative matrix.
     :param iter_mat: Iterative matrix for scoring and recording the scores.
     :param dir_rec: Record of possible directions from left/up-left/up to current position.
-    :param seq1: The first sequence.
-    :param seq2: The second sequence.
     :param index1: Initialize with end index of sequence1.
     :param index2: Initialize with end index of sequence2.
     :return: NULL
@@ -94,7 +95,7 @@ def backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2):
             return
         else:
             finalList.append(0)
-            backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2-1)
+            backtracking(iter_mat, dir_rec, index1, index2-1)
             finalList.pop()
     if dir_rec[index1][index2][1] == 1:
         if all(dir_rec[index1-1][index2-1] == [0, 0, 0]):
@@ -103,7 +104,7 @@ def backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2):
             return
         else:
             finalList.append(1)
-            backtracking(iter_mat, dir_rec, seq1, seq2, index1-1, index2-1)
+            backtracking(iter_mat, dir_rec, index1-1, index2-1)
             finalList.pop()
     if dir_rec[index1][index2][2] == 1:
         if all(dir_rec[index1-1][index2] == [0, 0, 0]):
@@ -112,32 +113,39 @@ def backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2):
             return
         else:
             finalList.append(2)
-            backtracking(iter_mat, dir_rec, seq1, seq2, index1-1, index2)
+            backtracking(iter_mat, dir_rec, index1-1, index2)
             finalList.pop()
 
 
-def get_index_info(chrom: str, chrom_start: int, chrom_end: int, score: int):
+def get_index_info(chrom: str, chrom_end: int, r: int):
     """
     Output a dataframe with information like BED.
     :param chrom: The name of the chromosome from which sequence1 came.
-    :param chrom_start: The start position of sequence1 in the chromosome.
     :param chrom_end: The end position of sequence1 in the chromosome.
-    :param score: The score made by SW algorithm.
+    :param r: Index of reference genome/chromosome.
     :return: Dataframe with information including chrom, chrom_start, chrom_end, and score.
     """
-    df = pd.DataFrame([[chrom, chrom_start, chrom_end, score]],
-                      columns=['chrom', 'chrom_start', 'chrom_end', 'score'])
+    global start_index
+    df = [chrom, start_index[1]+r, chrom_end+r]
     return df
 
 
 if __name__ == '__main__':
-    route_rec()
+    gene = Fasta(r'tests/families.fa')
+    gene = gene['DF0000558.4'][0:]
+    print(gene[0:20])
+    print(index2seq[0, 20, gene])
+    '''
+    create_global()
     seq1 = 'GATCG'
-    seq2 = 'aGATCGatgaaga'
+    seq2 = 'nGATCGatganga'
     gap = -5
     iter_mat, dir_rec = create_iterative_matrix(seq1, seq2, gap)
     index1 = np.argwhere(iter_mat == np.max(iter_mat))[0, 0]-1
     index2 = np.argwhere(iter_mat == np.max(iter_mat))[0, 1]-1
     score = np.max(iter_mat)
-    backtracking(iter_mat, dir_rec, seq1, seq2, index1, index2)
-    print(get_index_info('chrX', start_index[1], index2, score))
+    print(iter_mat)
+    if score >= 40:
+        backtracking(iter_mat, dir_rec, index1, index2)
+        print(get_index_info('chrX', index2, 1))
+    '''
