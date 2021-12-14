@@ -26,3 +26,9 @@ def fasta2dict(filename):
     f.close()
     return dic
 
+
+def fa2info(path):
+    fa_rec = Fasta(path)
+    name = fa_rec[0].name
+    seq = fa_rec[fa_rec[0].name][0:]
+    return name, seq

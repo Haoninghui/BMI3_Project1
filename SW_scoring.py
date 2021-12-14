@@ -1,7 +1,13 @@
 # Smith-Waterman Algorithm
 
 import numpy as np
-from pyfaidx import Fasta
+
+
+mat = np.array([[10, -3, -1, -4, 10],
+                [-3, 9, -5, 0, -3],
+                [-1, -5, 7, -3, -1],
+                [-4, 0, -3, 8, -4],
+                [10, -3, -1, -4, 10]])
 
 
 def create_global():
@@ -11,14 +17,8 @@ def create_global():
     """
     global finalList
     global start_index
-    global mat
     finalList = []
     start_index = []
-    mat = np.array([[10, -3, -1, -4, 10],
-                    [-3, 9, -5, 0, -3],
-                    [-1, -5, 7, -3, -1],
-                    [-4, 0, -3, 8, -4],
-                    [10, -3, -1, -4, 10]])
 
 
 def index2seq(start, end, seq):
