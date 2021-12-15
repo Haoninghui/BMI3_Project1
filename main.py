@@ -35,7 +35,7 @@ if __name__ == '__main__':
     m = len(query)
     n = len(ref)
     seed_mismatch = args.mismatch
-    hamming_results = Seeding.BLAST(query.seq, ref.seq, seed_mismatch)  # seeding and gap free extending
+    hamming_results = Seeding.seed_gapped(query.seq, ref.seq, seed_mismatch)  # seeding and gap free extending
     df = pd.DataFrame(columns=['chrom', 'chrom_start', 'chrom_end'])  # DataFrame to store the final output/result
     i = 0
     gap_penalty = args.gap

@@ -109,7 +109,7 @@ def merge_seed(match, seed_mismatch):
 
 # Core BLAST function
 # further can add seed thershold and extend thershold
-def BLAST(query, ref, seed_mismatch=5):
+def seed_gapped(query, ref, seed_mismatch=5):
     """
     Core BLAST function, start from query seq and ref genome
     :para query: query seq that already read-in in the main function
