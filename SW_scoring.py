@@ -1,22 +1,23 @@
-# Smith-Waterman Algorithm
+# Smith-Waterman Algorithm, and an output function of dataframe
 
 import numpy as np
 
-finalList = []
+# define some global variables
+finalList = []  # temporarily storing the path in backtracking.
 start_index = []
 mat = np.array([[10, -3, -1, -4, 10],
                 [-3, 9, -5, 0, -3],
                 [-1, -5, 7, -3, -1],
                 [-4, 0, -3, 8, -4],
-                [10, -3, -1, -4, 10]])
+                [10, -3, -1, -4, 10]])  # scoring matrix for single-bases comparison
 
 
-def index2seq(start, end, seq):
+def index2seq(start: int, end: int, seq):
     """
-    Transform indexes to sequence.
-    :param start: the starting position of a subsequence in a certain sequence
-    :param end: the end position of a subsequence in a certain sequence
-    :param seq: the whole-length sequence
+    Extract a sub-sequence from a sequence.
+    :param start: The starting position of a subsequence in a certain sequence
+    :param end: The end position of a subsequence in a certain sequence
+    :param seq: The whole-length sequence, a FastaRecord object.
     :return: the subsequence
     """
     return seq[start:end+1]
@@ -24,9 +25,9 @@ def index2seq(start, end, seq):
 
 def sym2no(sym: str) -> int:
     """
-    Transform symbols to numbers.
-    :param sym: symbol, ordering as ACGT, N = A
-    :return: transformed symbol
+    Transform symbols to numbers, easier for numpy matrix to manipulate.
+    :param sym: Symbol, ordering as ACGTN, N = A.
+    :return: Transformed symbol.
     """
     trans = str.maketrans('ACTGNacgtn', '0123001230')
     return int(sym.translate(trans))
@@ -35,9 +36,9 @@ def sym2no(sym: str) -> int:
 def get_score(sym1: str, sym2: str) -> int:
     """
     Compare the similarity of two bases via scoring matrix.
-    :param sym1: first symbol to be compared
-    :param sym2: second symbol yo be compared
-    :return: the score of the similarity of 2 symbols
+    :param sym1: First symbol to be compared.
+    :param sym2: Second symbol to be compared.
+    :return: The score of the similarity of 2 symbols.
     """
     global mat
     return mat[sym2no(sym1)][sym2no(sym2)]
@@ -45,11 +46,11 @@ def get_score(sym1: str, sym2: str) -> int:
 
 def create_iterative_matrix(seq1: str, seq2: str, gap=-5):
     """
-    Create the iterative matrix, thus getting the highest score.
-    :param seq1: the first sequence.
-    :param seq2: the second sequence.
+    Create an iterative matrix, thus getting the highest score.
+    :param seq1: The first sequence.
+    :param seq2: The second sequence (ref).
     :param gap: Gap penalty.
-    :return: A iterative matrix with score of each pair of bases comparison,
+    :return: An iterative matrix with score of each pair of bases comparison,
     and a record of possible directions to reach the highest score.
     """
     global finalList
@@ -64,7 +65,11 @@ def create_iterative_matrix(seq1: str, seq2: str, gap=-5):
         for j in range(1, length2+1):
             neighbors = [iter_mat[i, j-1], iter_mat[i-1, j-1], iter_mat[i-1, j]]
             neighboring_scores = [gap, get_score(seq1[i-1], seq2[j-1]), gap]
+            # Apart from the first row & column, the score in each cell is calculated by the neighboring cells:
+            # left, up-left, and up. Gap penalty is also considered.
             temp_score = np.add(neighbors, neighboring_scores)
+            # The score of the current cell may be come from multiple directions,
+            # judge and assign the values.
             if max(temp_score) > 0:
                 iter_mat[i, j] = max(temp_score)
                 possible_dirs = [y for y, x in enumerate(temp_score) if x == max(temp_score)]
@@ -73,48 +78,51 @@ def create_iterative_matrix(seq1: str, seq2: str, gap=-5):
     return iter_mat, dir_rec
 
 
-def backtracking(iter_mat, dir_rec, index1, index2):
+def backtracking(iter_mat, dir_rec, index1: int, index2: int):
     """
-    Find the route from end position to start position, in the iterative matrix.
+    Find the route from end position to start position w.r.t. the iterative matrix.
     :param iter_mat: Iterative matrix for scoring and recording the scores.
-    :param dir_rec: Record of possible directions from left/up-left/up to current position.
+    :param dir_rec: Record of possible directions from left|up-left|up to current cell.
     :param index1: Initialize with end index of sequence1.
-    :param index2: Initialize with end index of sequence2.
+    :param index2: Initialize with end index of sequence2 (ref).
     :return: NULL
     """
-    if dir_rec[index1][index2][1] == 1:
-        if all(dir_rec[index1-1][index2-1] == [0, 0, 0]):
+    if dir_rec[index1][index2][1] == 1:  # First, we like the the up-left direction representing a match.
+        # If the position points to the up-left, judge whether its neighbors are all zero (end backtracking).
+        if np.all(dir_rec[index1-1][index2-1] == [0, 0, 0]):
             start_index.append(index1-1)
             start_index.append(index2-1)
-            return
+            return  # End backtracking.
         else:
-            finalList.append(1)
+            finalList.append(1)  # Up-left.
             backtracking(iter_mat, dir_rec, index1-1, index2-1)
-            finalList.pop()
+            finalList.pop()  # Take the last element.
+    # ibid.
     elif dir_rec[index1][index2][0] == 1:
-        if all(dir_rec[index1][index2-1] == [0, 0, 0]):
+        if np.all(dir_rec[index1][index2-1] == [0, 0, 0]):
             start_index.append(index1)
             start_index.append(index2-1)
             return
         else:
-            finalList.append(0)
+            finalList.append(0)  # Left.
             backtracking(iter_mat, dir_rec, index1, index2-1)
             finalList.pop()
+    # ibid.
     else:
-        if all(dir_rec[index1-1][index2] == [0, 0, 0]):
+        if np.all(dir_rec[index1-1][index2] == [0, 0, 0]):
             start_index.append(index1-1)
             start_index.append(index2)
             return
         else:
-            finalList.append(2)
+            finalList.append(2)  # Up.
             backtracking(iter_mat, dir_rec, index1-1, index2)
             finalList.pop()
 
 
 def get_index_info(chrom: str, chrom_end: int, r: int):
     """
-    Output a dataframe with information like BED.
-    :param chrom: The name of the chromosome from which sequence1 came.
+    Export a dataframe with information like BED.
+    :param chrom: The name of the chromosome from which sequence came.
     :param chrom_end: The end position of sequence1 in the chromosome.
     :param r: Index of reference genome/chromosome.
     :return: A list with information including chrom, chrom_start, chrom_end, and score.

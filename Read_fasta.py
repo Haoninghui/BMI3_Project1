@@ -4,8 +4,8 @@ from pyfaidx import Fasta
 
 def fasta2dict(filename):
     """
-    :param filename: the repository of the .fasta file
-    :return: a dictionary which values are the nucleotide sequences
+    :param filename: The repository of the .fasta file
+    :return: A dictionary which values are the nucleotide sequences
     """
     f = open(filename, 'r')
     dic = {}
@@ -28,6 +28,11 @@ def fasta2dict(filename):
 
 
 def fa2info(path):
+    """
+    Extract name and sequence from FASTA file.
+    :param path: The path of the input FASTA file.
+    :return: The name of the sequence, e.g. chr1; and the sequence itself, but still as FastaRecord object.
+    """
     fa_rec = Fasta(path)
     name = fa_rec[0].name
     seq = fa_rec[fa_rec[0].name][0:]
