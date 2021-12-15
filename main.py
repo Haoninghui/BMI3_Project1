@@ -13,17 +13,21 @@ from pyfaidx import FastaNotFoundError
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='There should be some descriptions. '
-                                                 'Please set your working directory to where this .py file is.')
-    parser.add_argument('-r', '--ref', default='./tests/chr21.fa', type=str, help='Input the path of reference sequence')
-    parser.add_argument('-q', '--query', default='./tests/LTR5_Hs.fa', type=str, help='Input the path of query sequence')
-    parser.add_argument('-p', '--path', default='./build', type=str, help='Input the output path')
-    parser.add_argument('-o', '--output', default='build', type=str, help='Input the name of output file')
+    parser = argparse.ArgumentParser(description='''Please enter ONE FASTA file of the consensus sequence as a query 
+    sequence, and ONE FASTA file with exactly ONE chromosome sequence. \n
+    The output file will be in BED format.''')
+    parser.add_argument('-r', '--ref', default='./tests/chr21.fa', type=str,
+                        help='input the path of the reference FASTA file')
+    parser.add_argument('-q', '--query', default='./tests/LTR5_Hs.fa', type=str,
+                        help='input the path of the query FASTA file')
+    parser.add_argument('-p', '--path', default='./build', type=str, help='define the path of an output BED file')
+    parser.add_argument('-o', '--output', default='build', type=str, help='define the name of the output BED file')
     parser.add_argument('-m', '--mismatch', default=5, type=int,
-                        help='Input the allowed mismatch during merge nearby seeds.')
-    parser.add_argument('-g', '--gap', default=-5, type=int, help='Input the gap penalty')
-    parser.add_argument('-t', '--threshold', default=500, type=float, help='Input the threshold of SW score.')
-    parser.add_argument('-e', '--Escore', default=0.1, type=float, help='Input the threshold of Escore.')
+                        help='input the number of mismatches allowed during merging nearby seeds, default is 5')
+    parser.add_argument('-g', '--gap', default=-5, type=int, help='input the value of gap penalty, default is -5')
+    parser.add_argument('-t', '--threshold', default=500, type=float,
+                        help='input the threshold of Smith–Waterman score, default is 500')
+    parser.add_argument('-e', '--Escore', default=0.1, type=float, help='input the threshold E-score, default is 0.1')
     args = parser.parse_args()
     start = time.time()
     try:
