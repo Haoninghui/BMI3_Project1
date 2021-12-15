@@ -2,23 +2,13 @@
 
 import numpy as np
 
-
+finalList = []
+start_index = []
 mat = np.array([[10, -3, -1, -4, 10],
                 [-3, 9, -5, 0, -3],
                 [-1, -5, 7, -3, -1],
                 [-4, 0, -3, 8, -4],
                 [10, -3, -1, -4, 10]])
-
-
-def create_global():
-    """
-    Create some global variables.
-    :return: NULL
-    """
-    global finalList
-    global start_index
-    finalList = []
-    start_index = []
 
 
 def index2seq(start, end, seq):
@@ -62,6 +52,10 @@ def create_iterative_matrix(seq1: str, seq2: str, gap=-5):
     :return: A iterative matrix with score of each pair of bases comparison,
     and a record of possible directions to reach the highest score.
     """
+    global finalList
+    global start_index
+    finalList = []
+    start_index = []
     length1 = len(seq1)
     length2 = len(seq2)
     iter_mat = np.zeros((length1+1, length2+1))
@@ -88,15 +82,6 @@ def backtracking(iter_mat, dir_rec, index1, index2):
     :param index2: Initialize with end index of sequence2.
     :return: NULL
     """
-    if dir_rec[index1][index2][0] == 1:
-        if all(dir_rec[index1][index2-1] == [0, 0, 0]):
-            start_index.append(index1)
-            start_index.append(index2-1)
-            return
-        else:
-            finalList.append(0)
-            backtracking(iter_mat, dir_rec, index1, index2-1)
-            finalList.pop()
     if dir_rec[index1][index2][1] == 1:
         if all(dir_rec[index1-1][index2-1] == [0, 0, 0]):
             start_index.append(index1-1)
@@ -106,7 +91,16 @@ def backtracking(iter_mat, dir_rec, index1, index2):
             finalList.append(1)
             backtracking(iter_mat, dir_rec, index1-1, index2-1)
             finalList.pop()
-    if dir_rec[index1][index2][2] == 1:
+    elif dir_rec[index1][index2][0] == 1:
+        if all(dir_rec[index1][index2-1] == [0, 0, 0]):
+            start_index.append(index1)
+            start_index.append(index2-1)
+            return
+        else:
+            finalList.append(0)
+            backtracking(iter_mat, dir_rec, index1, index2-1)
+            finalList.pop()
+    else:
         if all(dir_rec[index1-1][index2] == [0, 0, 0]):
             start_index.append(index1-1)
             start_index.append(index2)

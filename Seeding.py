@@ -165,9 +165,9 @@ def BLAST(query, ref, seed_mismatch=5):
                 rl += 2
             elif q_start <= 0 and q_start + l > len(query) - 1:  # out of query length on both sides
                 q_start = 0
-                r_start -= 1
-                rl += 2
-                break
+                r_start -= int(sumscore/2)
+                rl += sumscore
+                sumscore = 0
         merge_seeds.iloc[row, 0] = q_start
         merge_seeds.iloc[row, 1] = r_start
         merge_seeds.iloc[row, 2] = l

@@ -2,6 +2,8 @@ numpy
 pandas
 time
 math
+os
+sys
 argparse
 tqdm
 pyfaidx
