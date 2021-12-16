@@ -31,6 +31,7 @@ if __name__ == '__main__':
     parser.add_argument('-e', '--Escore', default=0.1, type=float, help='input the threshold E-score, default is 0.1')
     args = parser.parse_args()
     start = time.time()
+    print('Please wait. The program is running.')
     try:
         ref_name, ref = Read_fasta.fa2info(args.ref)
         query_name, query = Read_fasta.fa2info(args.query)
